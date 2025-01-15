@@ -1,34 +1,40 @@
 <template>
   <main class="chat-window">
-    <!-- اگر چتی انتخاب نشده -->
     <div v-if="!activeChat" class="no-chat-selected">
-      <p>Please select a chat to view messages</p>
+      <p>لطفاً یک چت را برای نمایش انتخاب کنید</p>
     </div>
-
-    <!-- نمایش چت -->
     <div v-else class="chat-content">
+      <!-- هدر با آواتار و نام -->
       <header class="chat-header">
-        <h3>{{ activeChat.name }}</h3>
+        <img :src="activeChat.avatar" alt="Avatar" class="chat-avatar" />
+        <h3 class="chat-name">{{ activeChat.name }}</h3>
       </header>
+
+      <!-- بخش پیام‌ها -->
       <div class="chat-messages">
         <div
             v-for="(msg, index) in activeChat.messages"
             :key="index"
             class="chat-message"
+            :class="{ sent: msg.sender === 'me', received: msg.sender !== 'me' }"
         >
-          <p class="sender">{{ msg.sender }}</p>
-          <p class="message">{{ msg.content }}</p>
-          <span class="time">{{ msg.time }}</span>
+          <img :src="msg.avatar" alt="Avatar" class="message-avatar" />
+          <div class="message-bubble">
+            <p class="message-content">{{ msg.content }}</p>
+            <span class="message-time">{{ msg.time }}</span>
+          </div>
         </div>
       </div>
+
+      <!-- بخش ارسال پیام -->
       <footer class="chat-footer">
         <input
-            v-model="newMessage"
+            v-model="message"
             type="text"
-            placeholder="Type a message..."
-            @keyup.enter="sendMessage"
+            placeholder="پیام خود را بنویسید..."
+            @keyup.enter="emitMessage"
         />
-        <button @click="sendMessage">Send</button>
+        <button @click="emitMessage">ارسال</button>
       </footer>
     </div>
   </main>
@@ -41,26 +47,42 @@ export default {
   },
   data() {
     return {
-      newMessage: "",
+      message: "",
     };
   },
   methods: {
-    sendMessage() {
-      if (this.newMessage.trim() && this.activeChat) {
-        this.$emit("send-message", this.newMessage);
-        this.newMessage = "";
+    emitMessage() {
+      if (this.message.trim()) {
+        this.$emit("sendMessage", this.message);
+        this.message = "";
+        this.scrollToBottom();
       }
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const chatMessages = this.$el.querySelector(".chat-messages");
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
     },
   },
 };
 </script>
 
 <style>
-/* Chat window styles */
-.chat-window {
-  width: 70%;
+/* استایل صفحه چت */
+.chat-content {
   display: flex;
   flex-direction: column;
+  height: 100%;
+}
+
+.chat-window {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  direction: rtl;
 }
 
 .no-chat-selected {
@@ -73,38 +95,84 @@ export default {
 }
 
 .chat-header {
+  display: flex;
+  align-items: center;
   padding: 10px;
   background: #f5f5f5;
   border-bottom: 1px solid #ddd;
+  direction: ltr; /* برای انتقال به سمت چپ */
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px; /* فاصله بین آواتار و متن */
+}
+
+.chat-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
 }
 
 .chat-messages {
   flex-grow: 1;
   padding: 10px;
   overflow-y: auto;
+  background-color: #f9f9f9;
 }
 
 .chat-message {
+  display: flex;
+  align-items: flex-end;
   margin-bottom: 15px;
+  flex-direction: row-reverse;
 }
 
-.sender {
-  font-weight: bold;
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-left: 10px;
 }
 
-.message {
-  margin: 5px 0;
+.message-bubble {
+  max-width: 60%;
+  padding: 10px;
+  background: #e9e9e9;
+  position: relative;
 }
 
-.time {
+.sent .message-bubble {
+  background: #007bff;
+  color: white;
+  margin-left: auto;
+  border-radius: 10px 10px 0 10px;
+}
+
+.received .message-bubble {
+  background: #f1f1f1;
+  border-radius: 10px 10px 10px 0;
+}
+
+.message-content {
+  margin: 0;
+}
+
+.message-time {
   font-size: 0.8rem;
   color: #666;
+  margin-top: 5px;
+  text-align: right;
 }
 
 .chat-footer {
+  position: relative;
   display: flex;
   padding: 10px;
   border-top: 1px solid #ddd;
+  background-color: #fff;
 }
 
 .chat-footer input {
@@ -122,5 +190,14 @@ export default {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .chat-messages {
+    max-height: calc(100vh - 100px);
+  }
+  .chat-footer input {
+    font-size: 0.9rem;
+  }
 }
 </style>

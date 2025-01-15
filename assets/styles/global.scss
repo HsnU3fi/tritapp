@@ -1,0 +1,11 @@
+@font-face {
+  font-family: 'IranSans';
+  src: url('assets/fonts/iransans/IRANSansWeb_Light.woff2') format('woff2'),
+  url('assets/fonts/iransans/IRANSansWeb_Light.woff') format('woff');
+  font-weight: normal;
+}
+
+body {
+  font-family: 'IranSans', sans-serif;
+  background-color: #282828;
+}

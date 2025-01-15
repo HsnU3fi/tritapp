@@ -1,16 +1,17 @@
 <template>
   <aside class="sidebar">
     <header class="sidebar-header">
-      <input type="text" placeholder="Search" class="search-bar" />
-      <button class="action-btn">⚙️</button>
+      <div class="search-container">
+        <input type="text" placeholder="🔍 Search" class="search-bar" />
+      </div>
+      <img class="add-btn" src="assets/img/add.png"/>
     </header>
     <ul class="message-list">
-      <!-- لیست چت‌ها -->
       <li
-          v-for="(chat, index) in chats"
+          v-for="chat in chats"
           :key="chat.id"
-          class="message-item"
           :class="{ active: activeChatId === chat.id }"
+          class="message-item"
           @click="$emit('select-chat', chat.id)"
       >
         <div>
@@ -29,12 +30,14 @@ export default {
     activeChatId: Number,
   },
 };
+
+
 </script>
 
 <style>
 /* Sidebar styles */
 .sidebar {
-  width: 30%;
+  width: 20%;
   background: #f7f9fc;
   border-right: 1px solid #ddd;
   overflow-y: auto;
@@ -42,25 +45,27 @@ export default {
 
 .sidebar-header {
   display: flex;
+  height: 60px  ;
   padding: 10px;
   align-items: center;
   border-bottom: 1px solid #ddd;
 }
 
 .search-bar {
+  height: 25px;
   flex-grow: 1;
   padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
-.action-btn {
+
+.add-btn{
   margin-left: 10px;
-  padding: 8px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
+  height: 40px;
+  width: 40px;
+  border: 1px solid #007bff;
+  border-radius: 8px;
   cursor: pointer;
 }
 
@@ -84,4 +89,11 @@ export default {
 .message-item.active {
   background-color: #d9eaff;
 }
+.search-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
 </style>
