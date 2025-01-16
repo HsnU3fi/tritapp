@@ -14,9 +14,10 @@ export default {
         {
           id: 1,
           name: "Code Bot",
-          avatar: "https://via.placeholder.com/50",
+          avatar: "assets/img/avatar1.png",
           time: "10:49 AM",
           description: "TRITA Intelligent Innovations",
+          unreadMessages: 3,
           messages: [
             {
               sender: "Eng. Sahba Abdoli",
@@ -26,7 +27,7 @@ export default {
             },
             {
               sender: "me",
-              avatar: "https://via.placeholder.com/40",
+              avatar: " ",
               content: "نمیدونم، باید حذف شده باشه. باید چک کنم.",
               time: "21:24",
             },
@@ -34,23 +35,24 @@ export default {
         },
         {
           id: 2,
-          name: "Code Bot",
-          avatar: "https://via.placeholder.com/50",
+          name: "yoi Bot",
+          avatar: " ",
           time: "10:49 AM",
           description: "TRITA Intelligent Innovations",
+          unreadMessages: '',
           messages: [
-            { sender: "User 1", content: "سلام!", time: "10:00 AM" },
-            { sender: "Mahdi", content: "سلام، چطوری؟", time: "10:01 AM" },
+            {sender: "User 1", content: "سلام!", time: "10:00 AM"},
+            {sender: "Mahdi", content: "سلام، چطوری؟", time: "10:01 AM"},
           ],
         },
         {
           id: 3,
           name: "Code Bot",
-          avatar: "https://via.placeholder.com/50",
+          avatar: "assets/img/avatar1.png",
           time: "10:49 AM",
           description: "TRITA Intelligent Innovations",
           messages: [
-            { sender: "User 1", content: "فایل ارسال شد", time: "11:00 AM" },
+            {sender: "User 1", content: "فایل ارسال شد", time: "11:00 AM"},
           ],
         },
         // سایر چت‌ها...
@@ -78,156 +80,97 @@ export default {
         // افزودن پیام به چت فعلی
         this.activeChat.messages.push(newMessage);
 
-        // ارسال پیام به سرور WebSocket
-        const payload = JSON.stringify({
-          chatId: this.activeChatId,
-          message: newMessage,
-        });
-        this.socket.send(payload);
+        // بررسی وضعیت WebSocket قبل از ارسال پیام
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          // ارسال پیام به سرور WebSocket
+          const payload = JSON.stringify({
+            chatId: this.activeChatId,
+            message: newMessage,
+          });
+          this.socket.send(payload);
+
+          // ذخیره‌سازی پیام جدید در Local Storage
+          this.updateLocalStorage();
+        } else {
+          console.error("WebSocket is not open. Cannot send message.");
+        }
       }
     },
-    handleIncomingMessage(payload) {
-      const { chatId, message } = JSON.parse(payload);
 
-      // افزودن پیام به چت مرتبط
-      const chat = this.chats.find((c) => c.id === chatId);
-      if (chat) {
-        chat.messages.push(message);
+    handleIncomingMessage(payload) {
+      try {
+        let messageData = null;
+
+        // بررسی این که آیا payload JSON است یا نه
+        try {
+          messageData = JSON.parse(payload);
+        } catch (e) {
+          messageData = {message: payload};
+        }
+
+        if (messageData.chatId && messageData.message) {
+          const {chatId, message} = messageData;
+
+          // افزودن پیام به چت مرتبط
+          const chat = this.chats.find((c) => c.id === chatId);
+          if (chat) {
+            chat.messages.push(message);
+
+            // بروزرسانی Local Storage با پیام جدید
+            localStorage.setItem("chats", JSON.stringify(this.chats));
+          }
+        }
+      } catch (error) {
+        console.error("Error processing incoming message:", error);
       }
+    },
+
+
+    updateLocalStorage() {
+      // ذخیره‌سازی داده‌ها در Local Storage
+      localStorage.setItem("chats", JSON.stringify(this.chats));
     },
   },
   created() {
-    // اتصال به WebSocket سرور
-    this.socket = new WebSocket("ws://localhost:8080");
+    if (process.client) {
+      this.socket = new WebSocket("ws://localhost:8080");
 
-    // مدیریت پیام‌های ورودی
-    this.socket.onmessage = (event) => {
-      this.handleIncomingMessage(event.data);
-    };
+      this.socket.onmessage = (event) => {
+        this.handleIncomingMessage(event.data);
+      };
 
-    // مدیریت خطاها
-    this.socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+      this.socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
 
-    // بستن اتصال
-    this.socket.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-  },
-};
+      this.socket.onclose = () => {
+        console.log("WebSocket connection closed");
+      };
+
+      // بارگذاری پیام‌ها از Local Storage
+      const savedChats = localStorage.getItem("chats");
+      if (savedChats) {
+        this.chats = JSON.parse(savedChats);
+      }
+
+      // Listener برای تغییرات در Local Storage
+      window.addEventListener("storage", (event) => {
+        if (event.key === "chats") {
+          const updatedChats = JSON.parse(event.newValue);
+          this.chats = updatedChats;
+        }
+      });
+    }
+  }
+}
 
 </script>
 
+
 <style>
-/* General layout */
 .chat-app {
   display: flex;
   height: 100vh;
-}
-
-.sidebar {
-  width: 30%;
-  background: #f7f9fc;
-  border-right: 1px solid #ddd;
-  overflow-y: auto;
-}
-
-.chat-window {
-  width: 70%;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Sidebar styles */
-.sidebar-header {
-  display: flex;
-  padding: 10px;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-}
-
-.search-bar {
-  flex-grow: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.action-btn {
-  margin-left: 10px;
-  padding: 8px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.message-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.message-item {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.message-item:hover {
-  background-color: #f1f1f1;
-}
-
-.message-item.active {
-  background-color: #d9eaff;
-}
-
-/* Chat window styles */
-.no-chat-selected {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  font-size: 1.2rem;
-  color: #888;
-}
-
-.chat-header {
-  padding: 10px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #ddd;
-}
-
-.chat-messages {
-  flex-grow: 1;
-  padding: 10px;
-  overflow-y: auto;
-}
-
-.chat-message {
-  margin-bottom: 15px;
-}
-
-.sender {
-  font-weight: bold;
-}
-
-.message {
-  margin: 5px 0;
-}
-
-.time {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-.chat-footer {
-  display: flex;
-  padding: 10px;
-  border-top: 1px solid #ddd;
 }
 
 .chat-footer input {

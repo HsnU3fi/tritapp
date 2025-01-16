@@ -1,22 +1,26 @@
-const WebSocket = require('ws');
+import { WebSocketServer } from 'ws'; // استفاده از WebSocketServer به جای WebSocket.Server
 
-const server = new WebSocket.Server({ port: 8080 });
-let clients = new Set();
+const server = new WebSocketServer({ port: 8080 });
 
-server.on('connection', (ws) => {
-    clients.add(ws);
+server.on('connection', (client) => {
+    console.log('New client connected');
 
-    ws.on('message', (message) => {
-        // Broadcast پیام دریافتی به همه کلاینت‌ها
-        for (let client of clients) {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        }
+    // ارسال پیامی به کلاینت
+    client.send('Hello from server');
+
+    // دریافت پیام از کلاینت
+    client.on('message', (message) => {
+        console.log('Received message from client:', message);
     });
 
-    ws.on('close', () => {
-        clients.delete(ws);
+    // مدیریت قطع اتصال کلاینت
+    client.on('close', () => {
+        console.log('Client disconnected');
+    });
+
+    // مدیریت خطا
+    client.on('error', (error) => {
+        console.error('WebSocket error:', error);
     });
 });
 

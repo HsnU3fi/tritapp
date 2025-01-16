@@ -4,13 +4,11 @@
       <p>لطفاً یک چت را برای نمایش انتخاب کنید</p>
     </div>
     <div v-else class="chat-content">
-      <!-- هدر با آواتار و نام -->
       <header class="chat-header">
-        <img :src="activeChat.avatar" alt="Avatar" class="chat-avatar" />
+        <img src="assets/img/avatar1.png" alt="Avatar" class="chat-avatar" />
         <h3 class="chat-name">{{ activeChat.name }}</h3>
       </header>
 
-      <!-- بخش پیام‌ها -->
       <div class="chat-messages">
         <div
             v-for="(msg, index) in activeChat.messages"
@@ -18,7 +16,7 @@
             class="chat-message"
             :class="{ sent: msg.sender === 'me', received: msg.sender !== 'me' }"
         >
-          <img :src="msg.avatar" alt="Avatar" class="message-avatar" />
+          <img src="assets/img/avatar1.png" alt="Avatar" class="message-avatar" />
           <div class="message-bubble">
             <p class="message-content">{{ msg.content }}</p>
             <span class="message-time">{{ msg.time }}</span>
@@ -26,47 +24,61 @@
         </div>
       </div>
 
-      <!-- بخش ارسال پیام -->
       <footer class="chat-footer">
-        <input
-            v-model="message"
-            type="text"
-            placeholder="پیام خود را بنویسید..."
-            @keyup.enter="emitMessage"
-        />
-        <button @click="emitMessage">ارسال</button>
+        <!-- دکمه ارسال عکس و ویدیو -->
+
+        <button @click="emitMessage">
+          <i v-if="message" class="mdi mdi-24px mdi-send"></i>
+          <i v-else class="mdi mdi-24px mdi-microphone"></i>
+        </button>
+        <!-- ورودی پیام -->
+        <input v-model="message" type="text" placeholder="پیام خود را بنویسید..." @keyup.enter="emitMessage" />
+
+        <!-- دکمه ارسال پیام -->
+        <button class="attachment-btn">
+          <span class="mdi mdi-24px mdi-paperclip"></span>
+        </button>
       </footer>
+
     </div>
   </main>
 </template>
 
-<script>
-export default {
-  props: {
-    activeChat: Object,
-  },
-  data() {
-    return {
-      message: "",
-    };
-  },
-  methods: {
-    emitMessage() {
-      if (this.message.trim()) {
-        this.$emit("sendMessage", this.message);
-        this.message = "";
-        this.scrollToBottom();
-      }
-    },
-    scrollToBottom() {
-      this.$nextTick(() => {
-        const chatMessages = this.$el.querySelector(".chat-messages");
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      });
-    },
-  },
+<script setup>
+import { ref, watch, nextTick } from "vue";
+
+// دریافت prop
+defineProps({
+  activeChat: Object,
+});
+
+// تعریف داده‌ها
+const message = ref("");
+
+// متد ارسال پیام
+const emitMessage = () => {
+  if (message.value.trim()) {
+    // ارسال پیام به والدین
+    emit("sendMessage", message.value);
+    message.value = ""; // پاک کردن پیام
+    scrollToBottom();
+  }
 };
+
+// اسکرول به انتهای پیام‌ها
+const scrollToBottom = () => {
+  nextTick(() => {
+    const chatMessages = document.querySelector(".chat-messages");
+    if (chatMessages) {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  });
+};
+
+// ارسال رویداد به والد
+const emit = defineEmits(["sendMessage"]);
 </script>
+
 
 <style>
 /* استایل صفحه چت */
@@ -100,14 +112,14 @@ export default {
   padding: 10px;
   background: #f5f5f5;
   border-bottom: 1px solid #ddd;
-  direction: ltr; /* برای انتقال به سمت چپ */
+  direction: ltr;
 }
 
 .chat-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px; /* فاصله بین آواتار و متن */
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  margin: 10px;
 }
 
 .chat-name {
@@ -133,8 +145,9 @@ export default {
 .message-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  margin-left: 10px;
+  border-radius: 10px;
+  margin-left: 20px;
+  margin-right: 10px;
 }
 
 .message-bubble {
@@ -166,31 +179,44 @@ export default {
   margin-top: 5px;
   text-align: right;
 }
-
 .chat-footer {
   position: relative;
   display: flex;
   padding: 10px;
   border-top: 1px solid #ddd;
-  background-color: #fff;
+  background-color: #f9f9f9;
 }
 
 .chat-footer input {
   flex-grow: 1;
   padding: 10px;
+  margin: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  background-color: white;
+  border-radius: 15px;
 }
 
 .chat-footer button {
-  margin-left: 10px;
   padding: 10px;
-  background-color: #007bff;
+  background-color: #fff;
   color: white;
   border: none;
-  border-radius: 4px;
+  margin: 10px;
+  border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+
+
+
+.attachment-btn i {
+  font-size: 20px;
+  color: #fff; /* رنگ آیکون */
+}
+
 
 @media (max-width: 768px) {
   .chat-messages {
