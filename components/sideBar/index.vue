@@ -3,10 +3,10 @@
     <header class="sidebar-header">
       <div class="input">
         <span class="mdi mdi-24px mdi-magnify"></span>
-        <input placeholder=" Search"  v-model="searchQuery"/>
+        <input placeholder=" Search" v-model="searchQuery"/>
         <span class="mdi mdi-24px mdi-filter-variant"></span>
       </div>
-      <img class="add-btn" src="assets/img/add.png" />
+      <img class="add-btn" src="assets/img/add.png"/>
     </header>
     <ul class="message-list">
       <li
@@ -17,10 +17,10 @@
           @click="$emit('select-chat', chat.id)"
       >
         <div class="message-content">
-          <img src="assets/img/avatar1.png" alt="Avatar" class="avatar" />
+          <img :src="chat.avatar" alt="Avatar" class="avatar"/>
           <div class="message-details">
-            <h style="font-size: 13px;font-weight: bold;margin-top: 5px">{{ chat.name }}</h>
-            <p style="font-size: 12px;margin-top: -5px">{{ chat.description }}</p>
+            <h class="name-message">{{ chat.name }}</h>
+            <p class="description">{{ chat.description }}</p>
             <div class="message-actions">
               <button class="btn-inbox outlined">Inbox</button>
               <button class="btn-group outlined">Group</button>
@@ -28,7 +28,7 @@
           </div>
           <div class="extra-details">
             <span class="date">Jul 18</span>
-            <span  v-if="chat.unreadMessages" class="notif">{{chat.unreadMessages}}</span>
+            <span v-if="chat.unreadMessages" class="notif">{{ chat.unreadMessages }}</span>
             <span class="mdi mdi-chevron-down"></span>
           </div>
         </div>
@@ -38,18 +38,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import {ref, computed} from "vue";
 
-// تعریف props
 const props = defineProps({
   chats: Array,
   activeChatId: Number,
 });
 
-// تعریف داده‌ها
-const searchQuery = ref(""); // متن جستجو
-
-// محاسبه چت‌های فیلتر شده
+const searchQuery = ref("");
 const filteredChats = computed(() => {
   return props.chats.filter((chat) =>
       chat.name.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -59,12 +55,22 @@ const filteredChats = computed(() => {
 
 
 <style>
-/* Sidebar styles */
 .sidebar {
   width: 30%;
   background: #f7f9fc;
   border-right: 1px solid #ddd;
   overflow-y: auto;
+}
+
+.name-message {
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 5px
+}
+
+.description {
+  font-size: 12px;
+  margin-top: -5px
 }
 
 .sidebar-header {
@@ -159,11 +165,11 @@ input {
 
 .extra-details {
   display: flex;
-  flex-direction: column; /* نمایش عمودی */
-  align-items: center; /* وسط‌چین کردن آیتم‌ها */
-  gap: 5px; /* فاصله بین آیتم‌ها */
-  margin-right: 10px; /* فاصله از سمت راست */
-  margin-left: auto; /* برای راست‌چین کردن */
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-right: 10px;
+  margin-left: auto;
 }
 
 .extra-details .date {

@@ -5,7 +5,8 @@
     </div>
     <div v-else class="chat-content">
       <header class="chat-header">
-        <img src="assets/img/avatar1.png" alt="Avatar" class="chat-avatar" />
+        <img :src="activeChat.avatar || '/assets/img/default-avatar.jpeg'"
+             alt="Avatar" class="chat-avatar"/>
         <h3 class="chat-name">{{ activeChat.name }}</h3>
       </header>
 
@@ -16,8 +17,10 @@
             class="chat-message"
             :class="{ sent: msg.sender === 'me', received: msg.sender !== 'me' }"
         >
-          <img src="assets/img/avatar1.png" alt="Avatar" class="message-avatar" />
+          <img v-if="msg.flag==='send'" :src="msg.avatar || '/assets/img/default-avatar.jpeg'" alt="Avatar"
+               class="message-avatar"/>
           <div class="message-bubble">
+            <h3 class="message-sender">{{ msg.flag === 'send' ? 'receive' : msg.sender }}</h3>
             <p class="message-content">{{ msg.content }}</p>
             <span class="message-time">{{ msg.time }}</span>
           </div>
@@ -25,47 +28,39 @@
       </div>
 
       <footer class="chat-footer">
-        <!-- دکمه ارسال عکس و ویدیو -->
-
         <button @click="emitMessage">
           <i v-if="message" class="mdi mdi-24px mdi-send"></i>
           <i v-else class="mdi mdi-24px mdi-microphone"></i>
         </button>
-        <!-- ورودی پیام -->
-        <input v-model="message" type="text" placeholder="پیام خود را بنویسید..." @keyup.enter="emitMessage" />
-
-        <!-- دکمه ارسال پیام -->
-        <button class="attachment-btn">
+        <input v-model="message" type="text" placeholder="Type a message..." @keyup.enter="emitMessage"/>
+        <button  class="attachment-btn">
           <span class="mdi mdi-24px mdi-paperclip"></span>
         </button>
       </footer>
-
     </div>
   </main>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from "vue";
+import {ref,watch,  nextTick} from "vue";
 
-// دریافت prop
-defineProps({
+const props =defineProps({
   activeChat: Object,
 });
-
-// تعریف داده‌ها
 const message = ref("");
 
-// متد ارسال پیام
+watch(() => props.activeChat, () => {
+  message.value = "";
+});
+
 const emitMessage = () => {
   if (message.value.trim()) {
-    // ارسال پیام به والدین
     emit("sendMessage", message.value);
-    message.value = ""; // پاک کردن پیام
+    message.value = "";
     scrollToBottom();
   }
 };
 
-// اسکرول به انتهای پیام‌ها
 const scrollToBottom = () => {
   nextTick(() => {
     const chatMessages = document.querySelector(".chat-messages");
@@ -75,13 +70,10 @@ const scrollToBottom = () => {
   });
 };
 
-// ارسال رویداد به والد
 const emit = defineEmits(["sendMessage"]);
 </script>
 
-
 <style>
-/* استایل صفحه چت */
 .chat-content {
   display: flex;
   flex-direction: column;
@@ -169,6 +161,22 @@ const emit = defineEmits(["sendMessage"]);
   border-radius: 10px 10px 10px 0;
 }
 
+.message-sender {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #27d492;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.sent .message-sender {
+  text-align: right;
+}
+
+.received .message-sender {
+  text-align: left;
+}
+
 .message-content {
   margin: 0;
 }
@@ -179,21 +187,23 @@ const emit = defineEmits(["sendMessage"]);
   margin-top: 5px;
   text-align: right;
 }
+
 .chat-footer {
   position: relative;
   display: flex;
   padding: 10px;
   border-top: 1px solid #ddd;
-  background-color: #f9f9f9;
+  background-color: #dcdcdc;
 }
 
 .chat-footer input {
   flex-grow: 1;
   padding: 10px;
   margin: 10px;
+  direction: ltr;
   border: 1px solid #ddd;
   background-color: white;
-  border-radius: 15px;
+  border-radius: 10px;
 }
 
 .chat-footer button {
@@ -209,19 +219,20 @@ const emit = defineEmits(["sendMessage"]);
   align-items: center;
 }
 
-
-
-
-.attachment-btn i {
-  font-size: 20px;
-  color: #fff; /* رنگ آیکون */
+.chat-footer button i {
+  color: #282828;
 }
 
+.attachment-btn span {
+  font-size: 20px;
+  color: #282828;
+}
 
 @media (max-width: 768px) {
   .chat-messages {
     max-height: calc(100vh - 100px);
   }
+
   .chat-footer input {
     font-size: 0.9rem;
   }
